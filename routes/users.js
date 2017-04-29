@@ -30,4 +30,14 @@ router.delete('/deleteuser/:id', function(req, res){
  });
 });
 
+router.put('/updateuser/:id', function(req, res){
+	var db = req.db;
+	console.log("sdfsadfsdfsa");
+	var collection = db.get('userlist');
+	var userToUpdate = req.params.id;
+	collection.update({ '_id': userToUpdate}, req.body, function(err, user){
+		console.log("this is in responce");
+	});
+ });
+
 module.exports = router;

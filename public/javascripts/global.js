@@ -10,6 +10,8 @@ $(document).ready(function() {
 
 });
 
+$('#btnUpdateUser').hide();
+
 // Functions =============================================================
 
 // Fill table with data
@@ -29,6 +31,7 @@ function populateTable() {
             tableContent += '<td><a href="#" class="linkshowuser" rel="' + this.username + '">' + this.username + '</a></td>';
             tableContent += '<td>' + this.email + '</td>';
             tableContent += '<td><a href="#" class="linkdeleteuser" rel="' + this._id + '">delete</a></td>';
+            tableContent += '<td><a href="#" class="linkupdateuser" rel="' + this._id + '">update</a></td>';
             tableContent += '</tr>';
         });
 
@@ -45,12 +48,17 @@ function populateTable() {
     // Delete User link click
     $('#userList table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
 
+    $('#userList table tbody').on('click', 'td a.linkupdateuser', showUserInfoUpdate);
+
+    $('#btnUpdateUser').on('click', updateUser);
+
     });
 };
 
 
 // Show User Info
 function showUserInfo(event) {
+    console.log(event);
 
     // Prevent Link from Firing
     event.preventDefault();
@@ -69,6 +77,44 @@ function showUserInfo(event) {
     $('#userInfoAge').text(thisUserObject.age);
     $('#userInfoGender').text(thisUserObject.gender);
     $('#userInfoLocation').text(thisUserObject.location);     
+ 
+};
+
+function showUserInfoUpdate(x) {
+   
+ 
+   $('#btnAddUser').hide();
+    $('#btnUpdateUser').show();
+
+    // Prevent Link from Firing
+    
+
+    // Retrieve username from link rel attribute
+    var thisUserName = x
+
+    // Get Index of object based on id value
+    // var arrayPosition = userListData.map(function(arrayItem) { return x; }).indexOf(x);
+
+ // Get our User Object
+ for(var i=0; i<userListData.length; i++){
+    if(userListData[i]._id ==  $(this).attr('rel')){
+        var arrayPosition = i;       
+    }
+ }
+    var thisUserObject = userListData[arrayPosition];
+
+    //Populate Info Box
+   
+   document.getElementById("inputUserName").value = thisUserObject.username;
+   document.getElementById("inputUserAge").value = thisUserObject.age;
+   document.getElementById("inputUserGender").value = thisUserObject.gender;
+   document.getElementById("inputUserLocation").value = thisUserObject.location;
+   document.getElementById("inputUserFullname").value = thisUserObject.fullname;
+   document.getElementById("inputUserEmail").value = thisUserObject.email; 
+   document.getElementById("btnUpdateUser").value = $(this).attr('rel'); 
+
+   localStorage.setItem("updateId",  $(this).attr('rel'));
+     
  
 };
 
@@ -131,6 +177,7 @@ function addUser(event) {
 
 // Delete User
 function deleteUser(event) {
+    console.log(event)
 
     event.preventDefault();
 
@@ -144,6 +191,78 @@ function deleteUser(event) {
         $.ajax({
             type: 'DELETE',
             url: '/users/deleteuser/' + $(this).attr('rel')
+        }).done(function( response ) {
+
+            // Check for a successful (blank) response
+            if (response.msg === '') {
+            }
+            else {
+                alert('Error: ' + response.msg);
+            }
+
+            // Update the table
+            populateTable();
+
+        });
+
+    }
+    else {
+
+        // If they said no to the confirm, do nothing
+        return false;
+
+    }
+
+};
+
+
+function updateUser(event) {    
+
+      event.preventDefault();
+
+    // Super basic validation - increase errorCount variable if any fields are blank
+    var errorCount = 0;
+    $('#addUser input').each(function(index, val) {
+        if($(this).val() === '') { errorCount++; }
+    });
+
+
+      if(errorCount === 0) {
+
+        // If it is, compile all user info into one object
+        var newUser = {
+            'username': $('#addUser fieldset input#inputUserName').val(),
+            'email': $('#addUser fieldset input#inputUserEmail').val(),
+            'fullname': $('#addUser fieldset input#inputUserFullname').val(),
+            'age': $('#addUser fieldset input#inputUserAge').val(),
+            'location': $('#addUser fieldset input#inputUserLocation').val(),
+            'gender': $('#addUser fieldset input#inputUserGender').val()
+        }
+
+        // Use AJAX to post the object to our adduser service     
+    }
+    else {
+        // If errorCount is more than 0, error out
+        alert('Please fill in all fields');
+        return false;
+    }
+
+
+
+
+  
+    var idd= document.getElementById("btnUpdateUser");
+    // Pop up a confirmation dialog
+    var confirmation = confirm('Are you sure you want to update this user?');
+
+    // Check and make sure the user confirmed
+    if (confirmation === true) {
+
+        // If they did, do our delete
+        $.ajax({
+            type: 'PUT',
+            url: '/users/updateuser/'+ localStorage.getItem("updateId"), 
+            data: newUser
         }).done(function( response ) {
 
             // Check for a successful (blank) response
